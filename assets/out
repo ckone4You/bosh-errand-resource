@@ -1,0 +1,71 @@
+#!/bin/bash
+# vim: set ft=sh
+
+set -e
+
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
+
+# for jq
+PATH=/usr/local/bin:$PATH
+
+
+payload=$(mktemp $TMPDIR/bosh-errand-resource-request.XXXXXX)
+
+cat > $payload <&0
+
+target=$(jq -r '.source.target // ""' < $payload)
+deployment=$(jq -r '.source.deployment // ""' < $payload)
+client_id=$(jq -r '.source.client_id // ""' < $payload)
+client_secret=$(jq -r '.source.client_secret // ""' < $payload)
+ca_cert=$(jq -r '.source.ca_cert // ""' < $payload)
+errand=$(jq -r '.params.errand // ""' < $payload)
+keep_alive=$(jq -r '.params.keep_alive // false' < $payload)
+when_changed=$(jq -r '.params.when_changed // false' < $payload)
+
+if [ -z "$target" ]; then
+  echo "invalid payload (missing target)"
+  exit 1
+fi
+
+if [ -z "$client_id" ]; then
+  echo "invalid payload (missing client_id)"
+  exit 1
+fi
+
+if [ -z "$client_secret" ]; then
+  echo "invalid payload (missing client_secret)"
+  exit 1
+fi
+
+if [ -z "$deployment" ]; then
+  echo "invalid payload (missing deployment)"
+  exit 1
+fi
+
+if [ -z "$errand" ]; then
+  echo "invalid payload (missing errand)"
+  exit 1
+fi
+
+if [ -n "$ca_cert" ]; then
+  export BOSH_CA_CERT="$ca_cert"
+fi
+
+keep_alive_flag=""
+if [ $keep_alive = "true" ]; then
+  keep_alive_flag="--keep-alive"
+fi
+
+when_changed_flag=""
+if [ $when_changed = "true" ]; then
+  when_changed_flag="--when-changed"
+fi
+
+bosh-cli -e "$target" --client="$client_id" --client-secret="$client_secret" -d "$deployment" errands "$errand" $keep_alive_flag $when_changed_flag
+
+echo "{
+  version: {},
+  metadata: []
+}" >&3
+
