@@ -62,7 +62,7 @@ if [ $when_changed = "true" ]; then
   when_changed_flag="--when-changed"
 fi
 
-bosh -e "$target" --client="$client_id" --client-secret="$client_secret" -d "$deployment" errands "$errand" $keep_alive_flag $when_changed_flag
+bosh -e "$target" --client="$client_id" --client-secret="$client_secret" -d "$deployment" run-errand "$errand" $keep_alive_flag $when_changed_flag
 
 echo "{
   version: {},
