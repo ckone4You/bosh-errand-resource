@@ -45,7 +45,7 @@ jobs:
   plan:
   - put: staging
     params:
-	  errand: smoke-tests
-	  keep_alive: false
-	  when_changed: false
+      errand: smoke-tests
+      keep_alive: false
+      when_changed: false
 ```
