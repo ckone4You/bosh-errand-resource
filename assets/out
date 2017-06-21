@@ -65,7 +65,7 @@ fi
 bosh -e "$target" --client="$client_id" --client-secret="$client_secret" -d "$deployment" run-errand "$errand" $keep_alive_flag $when_changed_flag
 
 echo "{
-  version: {},
-  metadata: []
+  \"version\": {},
+  \"metadata\": []
 }" >&3
 
